@@ -120,11 +120,11 @@ class SerialPort {
         ; ###### Read the data from the COM Port ######
         ; MsgBox, this.FileHandle=%this.FileHandle% `nNum_Bytes=%_Num_Bytes%
         RF_Result := DllCall( "ReadFile"
-            , "UInt" , this.FileHandle ; hFile
-            , "Str"  , Data            ; lpBuffer
-            , "Int"  , _Num_Bytes      ; nNumberOfBytesToRead
-            , "UInt*", &Bytes_Received ; lpNumberOfBytesReceived
-            , "Int"  , 0 )             ; lpOverlapped
+            , "UInt" , this.FileHandle      ; hFile
+            , "Ptr"  , Data.Ptr             ; lpBuffer
+            , "UInt" , _Num_Bytes           ; nNumberOfBytesToRead
+            , "UInt*", &Bytes_Received := 0 ; lpNumberOfBytesReceived
+            , "Int"  , 0 )                  ; lpOverlapped
         if ( RF_Result != 1 ) {
             this._Error( "Failed Dll ReadFile`nRF_Result=" RF_Result, false, false )
         }
@@ -140,6 +140,7 @@ class SerialPort {
         ;      of the zero; that is, such data cannot be accessed or changed by most commands and
         ;      functions. However, such data can be manipulated by the address and dereference operators
         ;      (& and *), as well as DllCall itself."
+        Data_HEX := ""
         Loop(Bytes_Received) {
             ; First byte into the Rx FIFO ends up at position 0
             Data_HEX_Temp := Format( "{:x}", NumGet( Data, A_Index - 1, "UChar" ) ) ; Convert to HEX byte-by-byte
@@ -169,6 +170,7 @@ class SerialPort {
 
     Receive( _Length ) {
         Read_Data := this.Read( _Length )
+        ASCII := ""
 
         Loop(StrLen( Read_Data ) / 2) {
             Byte := SubStr( Read_Data, 1, 2 )
